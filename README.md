@@ -26,9 +26,13 @@ docker compose up --build
 например `https://aquarium.example.com`, если пробросили порт 8015 через
 обратный прокси (Nginx Proxy Manager, Caddy и т.п.).
 
-Данные (рыбки, фоны) хранятся в volume, смонтированном в
-`docker-compose.yml` в `./fish_data:/data/fish_storage` — переживают
-пересборку и перезапуск контейнера.
+Данные (рыбки, фоны) хранятся в именованном Docker-volume
+`fish_data` (см. `docker-compose.yml`) — переживают пересборку и
+перезапуск контейнера. Посмотреть, где физически лежит volume:
+
+```bash
+docker volume inspect fish_data
+```
 
 ## Установка как приложение на телефон (PWA)
 
