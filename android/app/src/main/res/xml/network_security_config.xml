@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+      The FishScanner server usually runs on a computer in the same home/office
+      Wi-Fi without HTTPS, so we allow plain HTTP for all destinations.
+      If you deploy the server behind HTTPS instead, you can remove this file
+      and the usesCleartextTraffic flag in AndroidManifest.xml.
+    -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

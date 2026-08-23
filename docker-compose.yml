@@ -1,0 +1,12 @@
+services:
+  fishscanner:
+    build: ./backend
+    container_name: fishscanner
+    ports:
+      - "8015:8000"
+    volumes:
+      - fish_data:/data/fish_storage
+    restart: unless-stopped
+
+volumes:
+  fish_data:

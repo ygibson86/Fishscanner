@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FishScanner — Аквариум</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#071824">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FishScanner">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="aquarium"></canvas>
+
+    <div id="hud">
+      <h1>🐠 FishScanner Aquarium</h1>
+      <div id="status" class="status">подключение…</div>
+    </div>
+
+    <button id="bg-toggle-btn" title="Сменить фон">🎨</button>
+
+    <div id="bg-panel" class="hidden">
+      <div class="bg-panel-title">Фон аквариума</div>
+      <div id="bg-gallery"></div>
+      <input id="bg-file-input" type="file" accept="image/*" hidden>
+
+      <div class="bg-panel-title">Освещение</div>
+      <div id="bg-filters">
+        <button class="bg-filter-swatch" data-filter="none">Обычное</button>
+        <button class="bg-filter-swatch" data-filter="day">День</button>
+        <button class="bg-filter-swatch" data-filter="dusk">Закат</button>
+        <button class="bg-filter-swatch" data-filter="night">Ночь</button>
+      </div>
+
+      <button id="install-btn" class="upload-btn install small hidden">⬇️ Установить приложение</button>
+    </div>
+
+    <div id="upload-panel">
+      <label class="upload-btn" for="file-input">
+        📷 Добавить рыбку
+        <input id="file-input" type="file" accept="image/*" capture="environment" hidden>
+      </label>
+      <div id="upload-hint">
+        Сфотографируйте рыбку прямо здесь. Установить эту страницу как приложение
+        можно в палитре фонов 🎨 или через меню браузера «Добавить на экран
+        «Домой»». Чтобы удалить рыбку — нажмите и удерживайте её (на телефоне)
+        или щёлкните правой кнопкой (на компьютере).
+      </div>
+    </div>
+
+    <div id="delete-confirm" class="hidden">
+      <div class="delete-confirm-text">Удалить рыбку?</div>
+      <div class="delete-confirm-actions">
+        <button id="delete-confirm-yes">Удалить</button>
+        <button id="delete-confirm-no">Отмена</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
