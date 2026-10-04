@@ -5,6 +5,7 @@ const SHELL_FILES = [
   '/style.css',
   '/app.js',
   '/manifest.json',
+  '/favicon.ico',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
 ];

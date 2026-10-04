@@ -72,6 +72,11 @@ async def service_worker():
     return FileResponse(os.path.join(STATIC_DIR, "service-worker.js"), media_type="application/javascript")
 
 
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse(os.path.join(STATIC_DIR, "favicon.ico"), media_type="image/x-icon")
+
+
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
