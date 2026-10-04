@@ -1,13 +1,13 @@
-const CACHE_NAME = 'fishscanner-shell-v2';
+const CACHE_NAME = 'fishscanner-shell-v4';
 
 const SHELL_FILES = [
   '/',
   '/style.css',
   '/app.js',
-  '/manifest.json',
+  '/manifest.json?v=2',
   '/favicon.ico',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  '/icons/icon-192.png?v=2',
+  '/icons/icon-512.png?v=2',
 ];
 
 self.addEventListener('install', (event) => {
