@@ -6,12 +6,13 @@ import cv2
 import numpy as np
 from fastapi import FastAPI, UploadFile, File, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
 from pydantic import BaseModel
 
+from . import pdf_sheet
 from .scanner import FishScanner
 from .storage import FishStorage, BackgroundStore, ConnectionManager
 
@@ -123,6 +124,44 @@ async def delete_fish(fish_id: str):
         raise HTTPException(status_code=404, detail="Рыбка не найдена")
     await manager.broadcast({"type": "removed_fish", "id": fish_id})
     return {"status": "deleted"}
+
+
+def _pdf_response(pdf_bytes: bytes, filename: str) -> Response:
+    return Response(
+        pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.get("/api/pdf/blank")
+async def blank_pattern_pdf():
+    """Empty A4 sheet with the 4 markers: print it, draw, photograph it."""
+    try:
+        pdf_bytes = pdf_sheet.build_pdf([])
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Не удалось собрать PDF: {exc}")
+    return _pdf_response(pdf_bytes, "fish_pattern.pdf")
+
+
+@app.post("/api/pdf")
+async def images_to_pdf(files: list[UploadFile] = File(...)):
+    """One A4 marker sheet per uploaded image, combined into a single PDF."""
+    images = []
+    for upload in files:
+        try:
+            images.append(pdf_sheet.prepare_image(await upload.read()))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Не удалось прочитать изображение: {upload.filename or 'файл без имени'}",
+            )
+
+    try:
+        pdf_bytes = pdf_sheet.build_pdf(images)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Не удалось собрать PDF: {exc}")
+    return _pdf_response(pdf_bytes, "fish_print.pdf")
 
 
 @app.get("/api/background")

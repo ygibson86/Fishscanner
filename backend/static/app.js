@@ -16,6 +16,12 @@ const bgGalleryEl = document.getElementById('bg-gallery');
 const bgFileInput = document.getElementById('bg-file-input');
 const bgFilterButtons = document.querySelectorAll('.bg-filter-swatch');
 const installBtn = document.getElementById('install-btn');
+const printToggleBtn = document.getElementById('print-toggle-btn');
+const printPanel = document.getElementById('print-panel');
+const printGalleryEl = document.getElementById('print-gallery');
+const printFileInput = document.getElementById('print-file-input');
+const printBlankBtn = document.getElementById('print-blank-btn');
+const printDownloadBtn = document.getElementById('print-download-btn');
 const deleteConfirmEl = document.getElementById('delete-confirm');
 const deleteConfirmYesBtn = document.getElementById('delete-confirm-yes');
 const deleteConfirmNoBtn = document.getElementById('delete-confirm-no');
@@ -402,8 +408,15 @@ bgToggleBtn.addEventListener('click', () => {
 });
 
 document.addEventListener('click', (event) => {
-  if (!bgPanel.contains(event.target) && event.target !== bgToggleBtn && !bgPanel.classList.contains('hidden')) {
+  // .contains() rather than !== because the print button holds an inline SVG
+  // and then event.target is the <path>, not the button itself
+  if (!bgPanel.contains(event.target) && !bgToggleBtn.contains(event.target) && !bgPanel.classList.contains('hidden')) {
     bgPanel.classList.add('hidden');
+  }
+  // Clicking outside closes the print panel too; because the toggle button of
+  // one panel is "outside" the other, opening one closes the other automatically.
+  if (!printPanel.contains(event.target) && !printToggleBtn.contains(event.target) && !printPanel.classList.contains('hidden')) {
+    printPanel.classList.add('hidden');
   }
 });
 
@@ -444,6 +457,102 @@ bgFileInput.addEventListener('change', async (event) => {
     bgFileInput.value = '';
   }
 });
+
+// --- Print panel: images -> PDF sheets with ArUco markers ---------------------------
+const printItems = []; // {file, name, url, selected}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function renderPrintPanel() {
+  printGalleryEl.innerHTML = '';
+  printGalleryEl.style.display = printItems.length ? 'grid' : 'none';
+
+  printItems.forEach((item) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'print-thumb' + (item.selected ? ' active' : '');
+    thumb.style.backgroundImage = `url("${item.url}")`;
+    thumb.title = item.name;
+    thumb.addEventListener('click', () => {
+      item.selected = !item.selected;
+      renderPrintPanel();
+    });
+
+    const del = document.createElement('span');
+    del.className = 'print-thumb-delete';
+    del.textContent = '×';
+    del.title = 'Убрать картинку';
+    del.addEventListener('click', (event) => {
+      event.stopPropagation();
+      URL.revokeObjectURL(item.url);
+      printItems.splice(printItems.indexOf(item), 1);
+      renderPrintPanel();
+    });
+    thumb.appendChild(del);
+    printGalleryEl.appendChild(thumb);
+  });
+
+  const selectedCount = printItems.filter((item) => item.selected).length;
+  printDownloadBtn.classList.toggle('hidden', selectedCount === 0);
+  printDownloadBtn.textContent = `⬇️ Скачать PDF (${selectedCount})`;
+}
+
+printToggleBtn.addEventListener('click', () => {
+  printPanel.classList.toggle('hidden');
+});
+
+printBlankBtn.addEventListener('click', async () => {
+  showToast('Готовлю бланк для печати…');
+  try {
+    const res = await fetch('/api/pdf/blank');
+    if (!res.ok) throw new Error('request failed');
+    downloadBlob(await res.blob(), 'fish_pattern.pdf');
+    showToast('📄 Бланк скачивается — распечатайте его');
+  } catch (e) {
+    showToast('Не удалось получить бланк', true);
+  }
+});
+
+printFileInput.addEventListener('change', (event) => {
+  const files = Array.from(event.target.files || []);
+  files.forEach((file) => {
+    printItems.push({ file, name: file.name, url: URL.createObjectURL(file), selected: true });
+  });
+  if (files.length) renderPrintPanel();
+  printFileInput.value = '';
+});
+
+printDownloadBtn.addEventListener('click', async () => {
+  const selected = printItems.filter((item) => item.selected);
+  if (!selected.length) return;
+
+  const formData = new FormData();
+  selected.forEach((item) => formData.append('files', item.file, item.name));
+
+  showToast(`Собираю PDF: ${selected.length} лист(ов)…`);
+  try {
+    const res = await fetch('/api/pdf', { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.detail || 'Не удалось собрать PDF', true);
+      return;
+    }
+    downloadBlob(await res.blob(), 'fish_print.pdf');
+    showToast(`📄 PDF готов: ${selected.length} лист(ов)`);
+  } catch (e) {
+    showToast('Ошибка соединения с сервером', true);
+  }
+});
+
+renderPrintPanel();
 
 // --- Delete a fish: right-click (desktop) or long-press (touch) -------------------
 let pendingDeleteFishId = null;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fishscanner-shell-v4';
+const CACHE_NAME = 'fishscanner-shell-v8';
 
 const SHELL_FILES = [
   '/',
