@@ -41,6 +41,7 @@ Thumbs.db
 backend/fish_storage/*
 !backend/fish_storage/.gitkeep
 /fish_data/
+back.png
 *.log
 tmp/
 temp/

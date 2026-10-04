@@ -44,7 +44,7 @@ function loadImage(src) {
   });
 }
 
-// --- Background layers (parallax) ------------------------------------------------
+// --- Background --------------------------------------------------------------------
 const ASSET = (name) => `/assets/${name}`;
 
 function drawCover(img) {
@@ -54,13 +54,8 @@ function drawCover(img) {
   ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
 }
 
-class BackLayer {
-  constructor(img) { this.img = img; }
-  draw() { drawCover(this.img); }
-}
-
 // Lighting filters, applied as a tint on top of whichever background is
-// currently active (built-in reef artwork OR a custom uploaded image).
+// currently active (default artwork OR a custom uploaded image).
 const FILTER_TINTS = {
   day: { color: 'rgba(255,255,255,0.14)', op: 'lighten' },
   dusk: { color: 'rgba(255,110,50,0.30)', op: 'multiply' },
@@ -238,12 +233,12 @@ class Fish {
 // --- Aquarium scene ------------------------------------------------------------------
 class Aquarium {
   constructor() {
-    this.backLayers = [];
     this.seaweeds = [];
     this.fish = [];
     this.bubbleImg = null;
     this.t = 0;
 
+    this.defaultBgImage = null;
     this.background = { base: { type: 'reef' }, filter: 'none', gallery: [] };
     this.customBgImage = null;
   }
@@ -263,17 +258,15 @@ class Aquarium {
   }
 
   async init() {
-    const [backDown, backMiddle, backReef, seaweed1, seaweed2, seaweed3, bubble] = await Promise.all([
-      loadImage(ASSET('back_down.png')),
-      loadImage(ASSET('back_middle.png')),
-      loadImage(ASSET('back_reef.png')),
+    const [backDefault, seaweed1, seaweed2, seaweed3, bubble] = await Promise.all([
+      loadImage(ASSET('back_default.png')),
       loadImage(ASSET('seaweed_1.png')),
       loadImage(ASSET('seaweed_2.png')),
       loadImage(ASSET('seaweed_3.png')),
       loadImage(ASSET('bubble.png')),
     ]);
 
-    this.backLayers = [new BackLayer(backDown), new BackLayer(backMiddle), new BackLayer(backReef)];
+    this.defaultBgImage = backDefault;
     this.bubbleImg = bubble;
 
     this.seaweeds = [
@@ -310,8 +303,8 @@ class Aquarium {
 
     if (this.background.base.type === 'custom' && this.customBgImage) {
       drawCover(this.customBgImage);
-    } else {
-      this.backLayers.forEach(l => l.draw());
+    } else if (this.defaultBgImage) {
+      drawCover(this.defaultBgImage);
     }
 
     const tint = FILTER_TINTS[this.background.filter];
@@ -368,8 +361,9 @@ function renderBackgroundPanel(state) {
 
   const reefBtn = document.createElement('button');
   reefBtn.className = 'bg-thumb' + (state.base.type === 'reef' ? ' active' : '');
-  reefBtn.style.background = 'linear-gradient(#2a7fb0,#0d3550)';
-  reefBtn.textContent = 'Риф';
+  reefBtn.style.backgroundImage = `url("${ASSET('back_default.png')}")`;
+  reefBtn.style.backgroundSize = 'cover';
+  reefBtn.textContent = 'По умолчанию';
   reefBtn.addEventListener('click', () => selectBackgroundBase({ type: 'reef' }));
   bgGalleryEl.appendChild(reefBtn);
 
